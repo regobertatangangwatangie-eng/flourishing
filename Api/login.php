@@ -1,17 +1,51 @@
 <?php
-include "../db.php";
+header("Content-Type: application/json");
 
-$data = json_decode(file_get_contents("php://input"));
+require_once "../db.php";
 
-$email = $data->email;
-$password = $data->password;
+// Read JSON input safely
+$input = json_decode(file_get_contents("php://input"), true);
 
-$query = "SELECT * FROM users WHERE email='$email' AND password='$password'";
-$result = mysqli_query($conn, $query);
-
-if(mysqli_num_rows($result) > 0){
-    echo json_encode(["success" => true]);
-} else {
-    echo json_encode(["success" => false]);
+if (!$input || !isset($input['email'], $input['password'])) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Invalid input"
+    ]);
+    exit;
 }
+
+$email = trim($input['email']);
+$password = $input['password'];
+
+// Prepare statement to prevent SQL injection
+$stmt = $conn->prepare("SELECT id, password FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($result->num_rows === 1) {
+    $user = $result->fetch_assoc();
+
+    // Verify hashed password
+    if (password_verify($password, $user['password'])) {
+        echo json_encode([
+            "success" => true
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Invalid credentials"
+        ]);
+    }
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "User not found"
+    ]);
+}
+
+$stmt->close();
+$conn->close();
 ?>
+

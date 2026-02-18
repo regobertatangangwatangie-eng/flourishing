@@ -1,98 +1,60 @@
-<?php
-	session_start();
-	require 'db.php';
-    if(!isset($_SESSION['logged_in']) OR $_SESSION['logged_in'] == 0)
-	{
-		$_SESSION['message'] = "You need to first login to access this page !!!";
-		header("Location: Login/error.php");
-	}
-    $bid = $_SESSION['id'];
-    if(isset($_GET['flag']))
-    {
-        $pid = $_GET['pid'];
+<?php 
+session_start();
+require 'db.php';
 
-        $sql = "INSERT INTO mycart (bid,pid)
-               VALUES ('$bid', '$pid')";
-        $result = mysqli_query($conn, $sql);
-    }
+// Redirect if not logged in
+if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] == 0) {
+    $_SESSION['message'] = "You need to first login to access this page !!!";
+    header("Location: Login/error.php");
+    exit;
+}
 
+$bid = $_SESSION['id'];
+
+// Add product to cart if flag is set
+if(isset($_GET['flag']) && isset($_GET['pid'])) {
+    $pid = intval($_GET['pid']); // sanitize
+    $sql = "INSERT INTO mycart (bid,pid) VALUES ('$bid', '$pid')";
+    mysqli_query($conn, $sql);
+}
+
+// Utility function to sanitize output
+function escape($data) {
+    return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<title>AgroCulture: My Cart</title>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		<meta name="description" content="" />
-		<meta name="keywords" content="" />
-		<link href="bootstrap\css\bootstrap.min.css" rel="stylesheet">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="bootstrap\js\bootstrap.min.js"></script>
-		<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
-		<link rel="stylesheet" href="login.css"/>
-		<script src="js/jquery.min.js"></script>
-		<script src="js/skel.min.js"></script>
-		<script src="js/skel-layers.min.js"></script>
-		<script src="js/init.js"></script>
-		<noscript>
-			<link rel="stylesheet" href="css/skel.css" />
-			<link rel="stylesheet" href="css/style.css" />
-			<link rel="stylesheet" href="css/style-xlarge.css" />
-		</noscript>
-		<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
-	</head>
-	<body class>
+<head>
+    <meta charset="UTF-8">
+    <title>AgroCulture: My Cart</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="login.css"/>
+    <link rel="stylesheet" href="css/skel.css"/>
+    <link rel="stylesheet" href="css/style.css"/>
+    <link rel="stylesheet" href="css/style-xlarge.css"/>
+</head>
+<body>
 
-		<?php
-			require 'menu.php';
-			function dataFilter($data)
-			{
-				$data = trim($data);
-				$data = stripslashes($data);
-				$data = htmlspecialchars($data);
-				return $data;
-			}
-		?>
+<?php require 'menu.php'; ?>
 
-		<!-- One -->
-			<section id="main" class="wrapper style1 align-center" >
-				<div class="container">
-						<h2>My Cart</h2>
+<!-- Main Cart Section -->
+<section id="main" class="wrapper style1 align-center">
+    <div class="container">
+        <h2>My Cart</h2>
 
-				<section id="two" class="wrapper style2 align-center">
-				<div class="container">
-					<div class="row">
-					<?php
-                        $sql = "SELECT * FROM mycart WHERE bid = '$bid'";
-                        $result = mysqli_query($conn, $sql);
-						while($row = $result->fetch_array()):
-                            $pid = $row['pid'];
-                            $sql = "SELECT * FROM fproduct WHERE pid = '$pid'";
-                            $result1 = mysqli_query($conn, $sql);
-                            $row1 = $result1->fetch_array();
-							$picDestination = "images/productImages/".$row1['pimage'];
-						?>
-							<div class="col-md-4">
-							<section>
-							<strong><h2 class="title" style="color:black; "><?php echo $row1['product'].'';?></h2></strong>
-							<a href="review.php?pid=<?php echo $row1['pid'] ;?>" > <img class="image fit" src="<?php echo $picDestination;?>" alt=""  /></a>
+        <section id="two" class="wrapper style2 align-center">
+            <div class="container">
+                <div class="row">
 
-							<div style="align: left">
-							<blockquote><?php echo "Type : ".$row1['pcat'].'';?><br><?php echo "Price : ".$row1['price'].' /-';?><br></blockquote>
-
-						</section>
-						</div>
-
-                    <?php endwhile;	?>
-
-
-
-					</div>
-
-			</section>
-					</header>
-
-			</section>
-
-	</body>
-</html>
+                <?php
+                // Fetch cart items
+                $sqlCart = "SELECT * FROM mycart WHERE bid = '$bid'";
+                $cartResult = mysqli_query($conn, $sqlCart);
+                while($cartRow = mysqli_fetch_assoc($cartResult)):
+                    $pid = $cartRow['pid'];
+                    $sqlProduct = "SELECT * FROM fproduct WHERE pid = '$pid'";
+                    $productResult = mysqli_query($conn, $sqlProduct);
+                    $product = mysqli_fetch_assoc($productResult);
+                    $picDestination

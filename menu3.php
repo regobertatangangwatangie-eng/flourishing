@@ -1,28 +1,46 @@
-	<?php
-		require 'db.php';
-	?>
-
+<?php 
+    require 'db.php';
+?>
 <!DOCTYPE html>
-			<header id="header">
-				
-				<nav id="nav">
-					<ul>
-						
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FarmPro Navigation</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <style>
+        #header a {
+            color: white;
+            font-size: 30px;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: inline-block;
+        }
 
-						<li><a href="index.php" style="color:white"><p style="font-size:30px">Home</span></p></a></li>
+        #header ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 10px;
+        }
 
-						<li><a href="create.php" style="color:white"><p style="font-size:30px">Sign up</span></p></a></li>
+        #header nav {
+            background-color: #292c2f;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body>
 
-						<li><a href="login.php" style="color:white"><p style="font-size:30px">Login</span></p></a></li>
+<header id="header">
+    <nav id="nav">
+        <ul>
+            <li><a href="index.php">Home</a></li>
+            <li><a href="create.php">Sign Up</a></li>
+            <li><a href="login.php">Login</a></li>
+        </ul>
+    </nav>
+</header>
 
-									
-					
-
-						
-				
-					</ul>
-				</nav>
-			</header>
-
-	</body>
+</body>
 </html>

@@ -1,163 +1,84 @@
 <?php
- 	session_start();
-	require 'db.php';
+session_start();
+require 'db.php';
 
-    if ($_SERVER["REQUEST_METHOD"] == "POST")
-    {
-		$productType = $_POST['type'];
-		$productName = dataFilter($_POST['pname']);
-		$productInfo = $_POST['pinfo'];
-		$productPrice = dataFilter($_POST['price']);
-		$fid = $_SESSION['id'];
+function dataFilter($data) {
+    return htmlspecialchars(stripslashes(trim($data)));
+}
 
-		$sql = "INSERT INTO fproduct (fid, product, pcat, pinfo, price)
-			   VALUES ('$fid', '$productName', '$productType', '$productInfo', '$productPrice')";
-		$result = mysqli_query($conn, $sql);
-		if(!$result)
-		{
-			$_SESSION['message'] = "Unable to upload Product !!!";
-			header("Location: Login/error.php");
-		}
-		else {
-			$_SESSION['message'] = "successfull !!!";
-		}
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!isset($_SESSION['id'])) {
+        $_SESSION['message'] = "You must be logged in to upload a product.";
+        header("Location: Login/error.php");
+        exit();
+    }
 
-		$pic = $_FILES['productPic'];
-		$picName = $pic['name'];
-		$picTmpName = $pic['tmp_name'];
-		$picSize = $pic['size'];
-		$picError = $pic['error'];
-		$picType = $pic['type'];
-		$picExt = explode('.', $picName);
-		$picActualExt = strtolower(end($picExt));
-		$allowed = array('jpg','jpeg','png');
+    $fid = (int)$_SESSION['id'];
+    $productType = $_POST['type'] ?? '';
+    $productName = dataFilter($_POST['pname'] ?? '');
+    $productInfo = $_POST['pinfo'] ?? '';
+    $productPrice = dataFilter($_POST['price'] ?? '');
 
-		if(in_array($picActualExt, $allowed))
-		{
-			if($picError === 0)
-			{
-				$_SESSION['productPicId'] = $_SESSION['id'];
-				$picNameNew = $productName.$_SESSION['productPicId'].".".$picActualExt ;
-				$_SESSION['productPicName'] = $picNameNew;
-				$_SESSION['productPicExt'] = $picActualExt;
-				$picDestination = "images/productImages/".$picNameNew;
-				move_uploaded_file($picTmpName, $picDestination);
-				$id = $_SESSION['id'];
+    // Basic validation
+    if (empty($productType) || empty($productName) || empty($productPrice)) {
+        $_SESSION['message'] = "Please fill all required fields!";
+        header("Location: Login/error.php");
+        exit();
+    }
 
-				$sql = "UPDATE fproduct SET picStatus=1, pimage='$picNameNew' WHERE product='$productName';";
+    // Escape inputs for SQL
+    $productName = mysqli_real_escape_string($conn, $productName);
+    $productType = mysqli_real_escape_string($conn, $productType);
+    $productInfo = mysqli_real_escape_string($conn, $productInfo);
+    $productPrice = mysqli_real_escape_string($conn, $productPrice);
 
-				$result = mysqli_query($conn, $sql);
-				if($result)
-				{
+    // Insert product
+    $sql = "INSERT INTO fproduct (fid, product, pcat, pinfo, price) 
+            VALUES ('$fid', '$productName', '$productType', '$productInfo', '$productPrice')";
+    $result = mysqli_query($conn, $sql);
 
-					$_SESSION['message'] = "Product Image Uploaded successfully !!!";
-					header("Location: market.php");
-				}
-				else
-				{
-					//die("bad");
-					$_SESSION['message'] = "There was an error in uploading your product Image! Please Try again!";
-					header("Location: Login/error.php");
-				}
-			}
-			else
-			{
-				$_SESSION['message'] = "There was an error in uploading your product image! Please Try again!";
-				header("Location: Login/error.php");
-			}
-		}
-		else
-		{
-			$_SESSION['message'] = "You cannot upload files with this extension!!!";
-			header("Location: Login/error.php");
-		}
-	}
+    if (!$result) {
+        $_SESSION['message'] = "Unable to upload Product: " . mysqli_error($conn);
+        header("Location: Login/error.php");
+        exit();
+    }
 
-	function dataFilter($data)
-	{
-	    $data = trim($data);
-	    $data = stripslashes($data);
-	    $data = htmlspecialchars($data);
-	    return $data;
-	}
+    // Handle file upload
+    if (isset($_FILES['productPic']) && $_FILES['productPic']['error'] === 0) {
+        $pic = $_FILES['productPic'];
+        $picName = $pic['name'];
+        $picTmpName = $pic['tmp_name'];
+        $picExt = strtolower(pathinfo($picName, PATHINFO_EXTENSION));
+        $allowed = ['jpg','jpeg','png'];
+
+        if (!in_array($picExt, $allowed)) {
+            $_SESSION['message'] = "Invalid file type. Allowed: jpg, jpeg, png.";
+            header("Location: Login/error.php");
+            exit();
+        }
+
+        $picNameNew = $productName . $fid . "." . $picExt;
+        $picDestination = "images/productImages/" . $picNameNew;
+
+        if (move_uploaded_file($picTmpName, $picDestination)) {
+            $sql = "UPDATE fproduct SET picStatus=1, pimage='$picNameNew' WHERE product='$productName' AND fid='$fid'";
+            if (!mysqli_query($conn, $sql)) {
+                $_SESSION['message'] = "Error updating product image: " . mysqli_error($conn);
+                header("Location: Login/error.php");
+                exit();
+            }
+            $_SESSION['message'] = "Product uploaded successfully!";
+            header("Location: market.php");
+            exit();
+        } else {
+            $_SESSION['message'] = "Failed to upload image. Try again!";
+            header("Location: Login/error.php");
+            exit();
+        }
+    } else {
+        $_SESSION['message'] = "Product uploaded without an image!";
+        header("Location: market.php");
+        exit();
+    }
+}
 ?>
-
-
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<title>AgroCulture</title>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		<meta name="description" content="" />
-		<meta name="keywords" content="" />
-		<link href="bootstrap\css\bootstrap.min.css" rel="stylesheet">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="bootstrap\js\bootstrap.min.js"></script>
-		<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
-		<link rel="stylesheet" href="login.css"/>
-		<link rel="stylesheet" type="text/css" href="indexFooter.css">
-		<script src="js/jquery.min.js"></script>
-		<script src="js/skel.min.js"></script>
-		<script src="js/skel-layers.min.js"></script>
-		<script src="js/init.js"></script>
-		<noscript>
-			<link rel="stylesheet" href="css/skel.css" />
-			<link rel="stylesheet" href="css/style.css" />
-			<link rel="stylesheet" href="css/style-xlarge.css" />
-		</noscript>
-		<script src="https://cdn.ckeditor.com/4.8.0/full/ckeditor.js"></script>
-		<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
-	</head>
-	<body>
-
-		<?php require 'menu.php'; ?>
-
-		<!-- One -->
-
-			<section id="one" class="wrapper style1 align-center">
-				<div class="container">
-					<form method="POST" action="uploadProduct.php" enctype="multipart/form-data">
-						<h2>Enter the Product Information here..!!</h2>
-						<br>
-				<center>
-					<input type="file" name="productPic"></input>
-					<br />
-				</center>
-				<div class="row">
-					  <div class="col-sm-6">
-						  <div class="select-wrapper" style="width: auto" >
-							  <select name="type" id="type" required style="background-color:white;color: black;">
-								  <option value="" style="color: black;">- Category -</option>
-								  <option value="Fruit" style="color: black;">Fruit</option>
-								  <option value="Vegetable" style="color: black;">Vegetable</option>
-								  <option value="Grains" style="color: black;">Grains</option>
-							  </select>
-						</div>
-					  </div>
-					  <div class="col-sm-6">
-						<input type="text" name="pname" id="pname" value="" placeholder="Product Name" style="background-color:white;color: black;" />
-					  </div>
-				</div>
-				<br>
-				<div>
-					<textarea  name="pinfo" id="pinfo" rows="12"></textarea>
-				</div>
-			<br>
-			<div class="row">
-				<div class="col-sm-6">
-					  <input type="text" name="price" id="price" value="" placeholder="Price" style="background-color:white;color: black;" />
-				</div>
-				<div class="col-sm-6">
-					<button class="button fit" style="width:auto; color:black;">Submit</button>
-				</div>
-			</div>
-			</form>
-		</div>
-	</section>
-
-		<script>
-			 CKEDITOR.replace( 'pinfo' );
-		</script>
-	</body>
-</html>

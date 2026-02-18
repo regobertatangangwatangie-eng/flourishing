@@ -1,13 +1,28 @@
-<?php 
-session_start(); 
-$servername = "localhost:3306";
-$username = "c2715086c_batje_noel";
-$password = "Usart@2580";
-$dbname = "c2715086c_mybank";
-// Create connection
+<?php
+
+declare(strict_types=1);
+
+session_start();
+
+/**
+ * Database configuration
+ * Use environment variables in production / GitHub Actions.
+ */
+$servername = getenv('DB_HOST') ?: 'localhost:3306';
+$username   = getenv('DB_USER') ?: 'root';
+$password   = getenv('DB_PASS') ?: '';
+$dbname     = getenv('DB_NAME') ?: 'mybank';
+
+/**
+ * Create MySQLi connection
+ */
 $conn = mysqli_connect($servername, $username, $password, $dbname);
-// Check connection
-if (!$conn) {
-die("Connection failed: " . mysqli_connect_error());
-} 
-?>
+
+/**
+ * Check connection
+ */
+if ($conn === false) {
+    error_log('Database connection failed: ' . mysqli_connect_error());
+    http_response_code(500);
+    exit('Database connection error.');
+}

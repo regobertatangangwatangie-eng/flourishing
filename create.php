@@ -1,109 +1,96 @@
-<?php session_start(); ?>
+<?php
+declare(strict_types=1);
 
+session_start();
+
+// Generate CSRF token
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<title></title>
-		<meta content="width=device-width, initial-scale=1.0" name="viewport">
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />	
-	
-        <script src="bootstrap\js\bootstrap.min.js"></script>
-		<!--[if lte IE 8]><script src="css/ie/html5shiv.js"></script><![endif]-->
-		<link rel="stylesheet" href="login.css"/>
-		<script src="js/jquery.min.js"></script>
-		<script src="js/skel.min.js"></script>
-		<script src="js/skel-layers.min.js"></script>
-		<script src="js/init.js"></script>
-		
-		<link rel="stylesheet" href="indexfooter.css" />
-		<!--[if lte IE 8]><link rel="stylesheet" href="css/ie/v8.css" /><![endif]-->
-	</head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroCulture - Sign Up</title>
 
-		<!-- Footer -->
-		<footer class="footer-distributed" style="background-color:black" id="aboutUs">
-		
- 			<?php
-		require 'menu4.php';
-	?>
-		
+    <!-- Use forward slashes -->
+    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="indexfooter.css">
 
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="js/jquery.min.js"></script>
+</head>
 
+<body>
 
-	<!-- One -->
+<?php require_once 'menu4.php'; ?>
 
+<section class="container" style="max-width:600px; margin:40px auto;">
+    <h3 class="text-center">Sign Up</h3>
 
-  <form class="modal-content animate" action="Login/signUp.php" method='POST'>
-  
-    
-    </div>
+    <form method="POST" action="Login/signUp.php">
 
-   
+        <!-- CSRF -->
+        <input type="hidden" name="csrf_token"
+               value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
 
+        <div class="form-group">
+            <input type="text" name="name" class="form-control"
+                   placeholder="Name" required>
+        </div>
 
-							<h3>SignUp</h3>
-							<form method="post" action="Login/signUp.php">
-								<center>
-								<div >
-									<div >
-										<input type="text" name="name" id="name" value="" placeholder="Name" required/>
-									</div>
-									<div >
-										<input type="text" name="uname" id="uname" value="" placeholder="UserName" required/>
-									</div>
-								</div>
-								
-									<div >
-										<input type="text" name="mobile" id="mobile" value="" placeholder="Mobile Number" required/>
-									</div>
+        <div class="form-group">
+            <input type="text" name="uname" class="form-control"
+                   placeholder="Username" required>
+        </div>
 
-									<div >
-										<input type="email" name="email" id="email" value="" placeholder="Email" required/>
-									</div>
-								</div>
-								<div class="row uniform">
-									<div >
-			                            <input type="password" name="password" id="password" value="" placeholder="Password" required/>
-			                        </div>
-			                        <div >
-			                            <input type="password" name="pass" id="pass" value="" placeholder="Retype Password" required/>
-			                        </div>
-								</div>
-								
-									<div >
-										<input type="text" name="addr" id="addr" value="" placeholder="Address" style="width:80%" required/>
-									</div>
-								</div>
-								<div class="row uniform">
-									<p>
-			                            <b>Category : </b>
-			                        </p>
-			                        <div class="3u 12u$(small)">
-			                            <input type="radio" id="farmer" name="category" value="1" checked>
-			                            <label for="farmer">Farmer</label>
-			                        </div>
-			                        <div class="3u 12u$(small)">
-			                            <input type="radio" id="buyer" name="category" value="1">
-			                            <label for="buyer">Buyer</label>
-			                        </div>
-								</div>
-								<div class="row uniform">
-									<div class="3u 12u$(small)">
-										<input type="submit" value="Submit" name="submit" class="special" /></li>
-									</div>
-									
-								</div>
-							</center>
-							</form>
-						</section>
-	</footer>	
-    </div>
-    </div>
-  </form>
-</div>
-</div>
+        <div class="form-group">
+            <input type="text" name="mobile" class="form-control"
+                   placeholder="Mobile Number" required>
+        </div>
 
+        <div class="form-group">
+            <input type="email" name="email" class="form-control"
+                   placeholder="Email" required>
+        </div>
 
+        <div class="form-group">
+            <input type="password" name="password" class="form-control"
+                   placeholder="Password" required>
+        </div>
 
-	</body>
+        <div class="form-group">
+            <input type="password" name="pass" class="form-control"
+                   placeholder="Retype Password" required>
+        </div>
+
+        <div class="form-group">
+            <input type="text" name="addr" class="form-control"
+                   placeholder="Address" required>
+        </div>
+
+        <div class="form-group">
+            <label><strong>Category:</strong></label><br>
+            <input type="radio" id="farmer" name="category" value="1" checked>
+            <label for="farmer">Farmer</label>
+
+            <input type="radio" id="buyer" name="category" value="2">
+            <label for="buyer">Buyer</label>
+        </div>
+
+        <div class="text-center">
+            <input type="submit" name="submit"
+                   value="Submit"
+                   class="btn btn-success">
+        </div>
+
+    </form>
+</section>
+
+<footer class="footer-distributed" style="background-color:black;">
+</footer>
+
+</body>
 </html>

@@ -1,26 +1,44 @@
-	<?php
-		require 'db.php';
-	?>
-
+<?php 
+    require 'db.php';
+?>
 <!DOCTYPE html>
-			<header id="header">
-				
-				<nav id="nav">
-					<ul>
-						
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FarmPro Header</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <style>
+        #header nav {
+            background-color: #292c2f;
+            padding: 15px;
+        }
 
-						<li><a href="index.php" style="color:white"><p style="font-size:30px">Home</span></p></a></li>
+        #header ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 10px;
+        }
 
-					
+        #header ul li a {
+            color: white;
+            font-size: 30px;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
 
-									
-					
+<header id="header">
+    <nav id="nav">
+        <ul>
+            <li><a href="index.php">Home</a></li>
+        </ul>
+    </nav>
+</header>
 
-						
-				
-					</ul>
-				</nav>
-			</header>
-
-	</body>
+</body>
 </html>

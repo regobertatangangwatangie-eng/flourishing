@@ -1,21 +1,32 @@
-	<?php
-		require 'db.php';
-	?>
-
+<?php 
+    require 'db.php';
+?>
 <!DOCTYPE html>
-			<header id="header">
-				
-				<nav id="nav">
-					<ul>
-						
-						<li><a href="indexf.php" style="color:white"><p style="font-size:30px">Start here / Commençez ici</span></p></a></li>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FarmPro Start</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="indexFooter.css">
+    <style>
+        #header a {
+            color: white;
+            font-size: 30px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
 
-									
-							
-				
-					</ul>
-				</nav>
-			</header>
+<header id="header">
+    <nav id="nav">
+        <ul>
+            <li>
+                <a href="indexf.php">Start here / Commencez ici</a>
+            </li>
+        </ul>
+    </nav>
+</header>
 
-	</body>
+</body>
 </html>

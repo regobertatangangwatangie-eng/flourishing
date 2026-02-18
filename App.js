@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,62 +6,96 @@ import {
   Button,
   FlatList,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator
 } from "react-native";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost/api";
 
 export default function App() {
   const [screen, setScreen] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [products, setProducts] = useState([]);
-
-  const API_URL = "http://YOUR_SERVER_IP/api"; // Change this
+  const [loading, setLoading] = useState(false);
 
   const loginUser = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter email and password");
+      return;
+    }
+
     try {
+      setLoading(true);
+
       const response = await fetch(`${API_URL}/login.php`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
       });
 
+      if (!response.ok) {
+        throw new Error("Network response failed");
+      }
+
       const data = await response.json();
-      if (data.success) {
+
+      if (data?.success) {
         setScreen("products");
       } else {
-        alert("Login Failed");
+        Alert.alert("Login Failed", data?.message || "Invalid credentials");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Login error:", error);
+      Alert.alert("Error", "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
+      setLoading(true);
+
       const response = await fetch(`${API_URL}/products.php`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch products");
+      }
+
       const data = await response.json();
-      setProducts(data);
+
+      // Handle structured API response
+      setProducts(Array.isArray(data?.data) ? data.data : []);
     } catch (error) {
-      console.log(error);
+      console.error("Fetch error:", error);
+      Alert.alert("Error", "Unable to load products");
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (screen === "products") {
       fetchProducts();
     }
-  }, [screen]);
+  }, [screen, fetchProducts]);
 
   if (screen === "login") {
     return (
       <View style={styles.container}>
         <Text style={styles.title}>FarmPro Login</Text>
+
         <TextInput
           placeholder="Email"
           style={styles.input}
           value={email}
+          autoCapitalize="none"
+          keyboardType="email-address"
           onChangeText={setEmail}
         />
+
         <TextInput
           placeholder="Password"
           secureTextEntry
@@ -69,7 +103,12 @@ export default function App() {
           value={password}
           onChangeText={setPassword}
         />
-        <Button title="Login" onPress={loginUser} />
+
+        {loading ? (
+          <ActivityIndicator size="large" />
+        ) : (
+          <Button title="Login" onPress={loginUser} />
+        )}
       </View>
     );
   }
@@ -77,21 +116,35 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Farm Products</Text>
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.product}>{item.name}</Text>
-            <Text>Price: ${item.price}</Text>
-          </View>
-        )}
-      />
+
+      {loading ? (
+        <ActivityIndicator size="large" />
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item, index) =>
+            item?.id ? item.id.toString() : index.toString()
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <Text style={styles.product}>{item?.name}</Text>
+              <Text>Price: ${item?.price}</Text>
+            </View>
+          )}
+          ListEmptyComponent={<Text>No products available</Text>}
+        />
+      )}
+
       <TouchableOpacity
         style={styles.logout}
-        onPress={() => setScreen("login")}
+        onPress={() => {
+          setProducts([]);
+          setEmail("");
+          setPassword("");
+          setScreen("login");
+        }}
       >
-        <Text style={{ color: "white" }}>Logout</Text>
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -131,5 +184,9 @@ const styles = StyleSheet.create({
     padding: 15,
     alignItems: "center",
     borderRadius: 5
+  },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "bold"
   }
 });
