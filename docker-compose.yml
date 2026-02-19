@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   farmpro:
     build:
@@ -5,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: farmpro_app
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       db:
         condition: service_healthy
@@ -15,6 +17,10 @@ services:
       DB_NAME: ${MYSQL_DATABASE}
       DB_USER: ${MYSQL_USER}
       DB_PASS: ${MYSQL_PASSWORD}
+    volumes:
+      - .:/var/www/html
+    networks:
+      - farmpro_network
 
   db:
     image: mysql:8.0
@@ -34,7 +40,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - farmpro_network
 
 volumes:
   dbdata:
     driver: local
+
+networks:
+  farmpro_network:
+    driver: bridge
